@@ -1,10 +1,14 @@
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, DateTime
 from sqlalchemy.sql import func
 from datetime import datetime
 
 from app.models.base import Base
 
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .event import Event
 
 class User(Base):
     __tablename__ = "users"
@@ -21,6 +25,6 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-
+    events: Mapped[List["Event"]] = relationship(back_populates="owner")
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email}>"
