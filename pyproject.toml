@@ -16,6 +16,8 @@ redis = "^5.0.1"
 passlib = "^1.7.4"
 bcrypt = "4.0.1"
 email-validator = "^2.3.0"
+python-jose = {extras = ["cryptography"], version = "^3.5.0"}
+python-multipart = "^0.0.21"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
