@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,11 +22,18 @@ async def create_event(
 async def read_events(
     skip: int = 0,
     limit: int = 100,
+    keyword: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return await crud_event.get_user_events(db=db, user_id=current_user.id, skip=skip, limit=limit)
 
+    return await crud_event.get_user_events(
+        db=db,
+        user_id=current_user.id,
+        skip=skip,
+        limit=limit,
+        keyword=keyword
+    )
 
 @router.get("/{event_id}", response_model=EventResponse)
 async def read_event(
