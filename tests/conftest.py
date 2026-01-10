@@ -66,3 +66,21 @@ async def authorized_client(client: AsyncClient, session: AsyncSession):
     }
 
     return client
+
+@pytest_asyncio.fixture(scope="function")
+async def normal_user_token_headers(session: AsyncSession):
+    from app.models.user import User
+    from app.core.security import get_password_hash
+
+    user_email = "headers_user@example.com"
+    user_password = "password123"
+    hashed_password = get_password_hash(user_password)
+
+    user = User(email=user_email, hashed_password=hashed_password)
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    access_token = create_access_token(data={"sub": user.email})
+
+    return {"Authorization": f"Bearer {access_token}"}

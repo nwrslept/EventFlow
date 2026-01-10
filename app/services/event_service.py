@@ -5,6 +5,10 @@ from fastapi import HTTPException, status
 
 from app.models.event import Event
 from app.models.user import User
+from app.schemas.filters import EventFilterParams
+from typing import List
+from sqlalchemy import or_
+
 
 class EventService:
     @staticmethod
@@ -55,3 +59,35 @@ class EventService:
         await db.refresh(event)
 
         return event
+
+    @staticmethod
+    async def get_multi(
+            db: AsyncSession,
+            filters: EventFilterParams
+    ) -> List[Event]:
+        """
+        Get list of events with filtering and pagination.
+        """
+        query = select(Event).options(selectinload(Event.participants))
+
+        if filters.keyword:
+            search = f"%{filters.keyword}%"
+            query = query.filter(
+                or_(
+                    Event.title.ilike(search),
+                    Event.description.ilike(search)
+                )
+            )
+
+        if filters.start_date:
+            query = query.filter(Event.date_time >= filters.start_date)
+
+        if filters.end_date:
+            query = query.filter(Event.date_time <= filters.end_date)
+
+        query = query.order_by(Event.date_time.asc())
+
+        query = query.offset(filters.skip).limit(filters.limit)
+
+        result = await db.execute(query)
+        return result.scalars().all()

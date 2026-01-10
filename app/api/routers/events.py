@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.event import EventCreate, EventResponse
+from app.schemas.filters import EventFilterParams
 from app.models.user import User
 from app.api.deps import get_current_user
 from app.crud import event as crud_event
@@ -36,17 +37,18 @@ async def read_events(
         keyword=keyword
     )
 
-@router.get("/{event_id}", response_model=EventResponse)
-async def read_event(
-        event_id: int,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+@router.get("/", response_model=List[EventResponse])
+async def read_events(
+    filters: EventFilterParams = Depends(),
+    db: AsyncSession = Depends(get_db),
 ):
-    event = await crud_event.get_event(db, event_id=event_id)
-    if event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    return event
+    """
+    Retrieve events with filters:
+    - **limit**: max items per page (default 10)
+    - **skip**: items to skip
+    - **keyword**: search text
+    """
+    return await EventService.get_multi(db=db, filters=filters)
 
 
 @router.put("/{event_id}", response_model=EventResponse)
